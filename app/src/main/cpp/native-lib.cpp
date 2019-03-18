@@ -20,8 +20,8 @@ Java_com_hui_yuvdemo_MainActivity_nativeARGBScale(JNIEnv *env, jobject thiz, jby
                                                   jint width, jint height, jint dst_width,
                                                   jint dst_height) {
     jbyte *array = env->GetByteArrayElements(array_, NULL);
-    YuvJni yuvJni;
-    yuvJni.init(width,height,dst_width,dst_height);
+//    YuvJni yuvJni;
+//    yuvJni.init(width,height,dst_width,dst_height);
 
     size_t dst_size = dst_width * dst_height * 4;
     uint8_t *dst = static_cast<uint8_t *>(malloc(dst_size));

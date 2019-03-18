@@ -18,7 +18,7 @@ private:
     jbyte *Src_i420_data_rotate;
 public:
     void JNI_OnUnload(JavaVM *jvm, void *reserved);
-    void init(jint width, jint height, jint dst_width, jint dst_height)
+    void init(jint width, jint height, jint dst_width, jint dst_height);
     void scaleI420(jbyte *src_i420_data, jint width, jint height, jbyte *dst_i420_data, jint dst_width,
                    jint dst_height, jint mode);
     void rotateI420(jbyte *src_i420_data, jint width, jint height, jbyte *dst_i420_data, jint degree);
