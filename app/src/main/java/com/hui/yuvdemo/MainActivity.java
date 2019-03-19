@@ -27,6 +27,9 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
     private ImageView imageView1;
     private ImageView imageView2;
 
+    public static final int ARGB = 1;
+    public static final int ABGR = 2;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,11 +58,25 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
                 ByteBuffer allocate = ByteBuffer.allocate(bitmap.getByteCount());
                 bitmap.copyPixelsToBuffer(allocate);
                 byte[] array = allocate.array();
+
                 int width = bitmap.getWidth();
                 int height = bitmap.getHeight();
-                Bitmap bitmap2 = Bitmap.createBitmap(width / 2, height / 2, Bitmap.Config.ARGB_8888);
-                byte[] dst = nativeARGBScale(array, width, height, bitmap2.getWidth(), bitmap2.getHeight());
+                Bitmap bitmap2 = Bitmap.createBitmap(2 * width, 2 * height, Bitmap.Config.ARGB_8888);
+                int width1 = bitmap2.getWidth();
+                int height1 = bitmap2.getHeight();
+                byte[] dst = nativeARGBScale(array, width, height, width1, height1);
                 if (dst != null) {
+                    byte[] i420 = nativeABGRToI420(array, width1, height1);
+                    try {
+                        FileOutputStream fileOutputStream = new FileOutputStream("/sdcard/1.yuv");
+                        fileOutputStream.write(i420);
+                        fileOutputStream.flush();
+                        fileOutputStream.close();
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                     bitmap2.copyPixelsFromBuffer(ByteBuffer.wrap(dst));
                     imageView2.setImageBitmap(bitmap2);
                     FileOutputStream fileOutputStream = null;
@@ -92,4 +109,13 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
     public native String stringFromJNI();
 
     public native byte[] nativeARGBScale(byte[] array, int width, int height, int dst_width, int dst_height);
+
+    /**
+     * @param array  格式为ABGR
+     * @param width
+     * @param height
+     * @return
+     */
+    public native byte[] nativeABGRToI420(byte[] array, int width, int height);
+
 }
