@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -17,7 +18,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-public class MainActivity extends AppCompatActivity implements ActivityCompat.OnRequestPermissionsResultCallback {
+public class MainActivity extends AppCompatActivity implements ActivityCompat.OnRequestPermissionsResultCallback, View.OnClickListener {
 
     // Used to load the 'native-lib' library on application startup.
     static {
@@ -99,6 +100,7 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
             }
         });
         tv.setText(stringFromJNI());
+        findViewById(R.id.bt_clip).setOnClickListener(this);
     }
 
 
@@ -118,4 +120,36 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
      */
     public native byte[] nativeABGRToI420(byte[] array, int width, int height);
 
+    public native byte[] nativeARGBScaleClip(byte[] array,int width,int height,int dst_width,int dst_height,int clip_x,int clip_y,int clip_width,int clip_height);
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.bt_clip:
+                final Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.th);
+                imageView1.setImageBitmap(bitmap);
+                ByteBuffer dst = ByteBuffer.allocate(bitmap.getByteCount());
+                bitmap.copyPixelsToBuffer(dst);
+                int width = bitmap.getWidth();
+                int height = bitmap.getHeight();
+                Log.w("MainActivity","w,h = "+ width + ","+height);
+                final byte[] bytes = nativeARGBScaleClip(dst.array(), bitmap.getWidth(), bitmap.getHeight(), width, height, 60, 58, 200, 400);
+                Bitmap bm = Bitmap.createBitmap(width,width, Bitmap.Config.ARGB_8888);
+                bm.copyPixelsFromBuffer(ByteBuffer.wrap(bytes));
+                imageView2.setImageBitmap(bm);
+                try {
+                    FileOutputStream fos = new FileOutputStream("/sdcard/1.jpg");
+                    bm.compress(Bitmap.CompressFormat.JPEG,100,fos);
+                    fos.flush();
+                    fos.close();
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                break;
+        }
+
+    }
 }

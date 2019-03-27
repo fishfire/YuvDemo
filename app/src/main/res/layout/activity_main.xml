@@ -9,19 +9,25 @@
     <ImageView
         android:id="@+id/iv_image1"
         android:layout_width="match_parent"
-        android:layout_height="100dp"
+        android:layout_height="200dp"
         android:background="@color/colorAccent"/>
 
     <ImageView
         android:id="@+id/iv_image2"
         android:layout_width="match_parent"
-        android:layout_height="200dp" />
+        android:layout_height="200dp"
+        android:background="@color/colorAccent"/>
 
     <Button
         android:id="@+id/sample_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Hello World!"/>
+    <Button
+        android:id="@+id/bt_clip"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="crop 50,50,100,100"/>
 
 
 
