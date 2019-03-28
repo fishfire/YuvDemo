@@ -101,39 +101,34 @@ Java_com_hui_yuvdemo_MainActivity_nativeABGRToI420(JNIEnv *env, jobject instance
     env->ReleaseByteArrayElements(array_, array, 0);
 
     return result;
-}extern "C"
-JNIEXPORT jbyteArray JNICALL
-Java_com_hui_yuvdemo_MainActivity_nativeARGBScaleClip(JNIEnv *env, jobject instance,
-                                                      jbyteArray array_, jint width, jint height,
-                                                      jint dst_width, jint dst_height, jint clip_x,
-                                                      jint clip_y, jint clip_width,
-                                                      jint clip_height) {
-    jbyte *array = env->GetByteArrayElements(array_, NULL);
+}
+static int i = 0;
 
-    // TODO
-//    int ARGBScaleClip(const uint8_t* src_argb,
-//                      int src_stride_argb,
-//                      int src_width,
-//                      int src_height,
-//                      uint8_t* dst_argb,
-//                      int dst_stride_argb,
-//                      int dst_width,
-//                      int dst_height,
-//                      int clip_x,
-//                      int clip_y,
-//                      int clip_width,
-//                      int clip_height,
-//                      enum FilterMode filtering);
-    uint8_t *dst_argb = static_cast<uint8_t *>(malloc(dst_width * dst_height * 4));
-    int ret = ARGBScaleClip((uint8_t *) array, width * 4, width, height, dst_argb, dst_width * 4,
-                            dst_width, dst_height, clip_x, clip_y, clip_width, clip_height,
-                            kFilterNone);
-    LOGW("nativeARGBScaleClip ret = %d", ret);
+extern "C"
+JNIEXPORT jbyteArray JNICALL
+Java_com_hui_yuvdemo_MainActivity_nativeI420CropToARGB(JNIEnv *env, jobject instance,
+                                                       jbyteArray array_, jint width, jint height,
+                                                       jint dst_width, jint dst_height, jint clip_x,
+                                                       jint clip_y, jint clip_width,
+                                                       jint clip_height) {
+    jbyte *array = env->GetByteArrayElements(array_, NULL);
     jbyteArray dstByteArray = NULL;
-    if (ret == 0) {
-        dstByteArray = env->NewByteArray(dst_width * dst_height * 4);
-        env->SetByteArrayRegion(dstByteArray, 0, dst_width * dst_height * 4, (jbyte *) dst_argb);
+    size_t dst_len = dst_width * dst_height * 4;
+    uint32_t format = libyuv::FOURCC_I420;
+
+    uint8_t *dst_argb = static_cast<uint8_t *>(malloc(dst_len));
+    int r = ConvertToARGB((uint8_t *) array, width * height * 3 / 2, dst_argb, dst_width << 2,
+                          clip_x, clip_y, width, height, clip_width, clip_height, kRotate0,
+                          libyuv::FOURCC_I420);
+
+    if (r == 0) {
+        uint8_t *dst_abgr = static_cast<uint8_t *>(malloc(dst_len));
+        ARGBToABGR(dst_argb,dst_width << 2,dst_abgr,dst_width << 2,dst_width,dst_height);
+        dstByteArray = env->NewByteArray(dst_len);
+        env->SetByteArrayRegion(dstByteArray, 0, dst_len, (jbyte *) dst_abgr);
+        free(dst_abgr);
     }
+
     free(dst_argb);
     env->ReleaseByteArrayElements(array_, array, 0);
     return dstByteArray;

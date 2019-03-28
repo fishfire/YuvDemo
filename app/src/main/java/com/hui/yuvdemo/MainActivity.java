@@ -6,16 +6,20 @@ import android.graphics.BitmapFactory;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 public class MainActivity extends AppCompatActivity implements ActivityCompat.OnRequestPermissionsResultCallback, View.OnClickListener {
@@ -27,7 +31,7 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
 
     private ImageView imageView1;
     private ImageView imageView2;
-
+    private EditText mEditText1;
     public static final int ARGB = 1;
     public static final int ABGR = 2;
 
@@ -38,6 +42,7 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
 
         imageView1 = findViewById(R.id.iv_image1);
         imageView2 = findViewById(R.id.iv_image2);
+        mEditText1 = findViewById(R.id.et_coordinates);
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -120,30 +125,60 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
      */
     public native byte[] nativeABGRToI420(byte[] array, int width, int height);
 
-    public native byte[] nativeARGBScaleClip(byte[] array,int width,int height,int dst_width,int dst_height,int clip_x,int clip_y,int clip_width,int clip_height);
+    public native byte[] nativeI420CropToARGB(byte[] array, int width, int height, int dst_width, int dst_height, int clip_x, int clip_y, int clip_width, int clip_height);
 
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.bt_clip:
-                final Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.th);
-                imageView1.setImageBitmap(bitmap);
-                ByteBuffer dst = ByteBuffer.allocate(bitmap.getByteCount());
-                bitmap.copyPixelsToBuffer(dst);
-                int width = bitmap.getWidth();
-                int height = bitmap.getHeight();
-                Log.w("MainActivity","w,h = "+ width + ","+height);
-                final byte[] bytes = nativeARGBScaleClip(dst.array(), bitmap.getWidth(), bitmap.getHeight(), width, height, 60, 58, 200, 400);
-                Bitmap bm = Bitmap.createBitmap(width,width, Bitmap.Config.ARGB_8888);
-                bm.copyPixelsFromBuffer(ByteBuffer.wrap(bytes));
-                imageView2.setImageBitmap(bm);
+//                final Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.th);
+//                imageView1.setImageBitmap(bitmap);
+//                ByteBuffer dst = ByteBuffer.allocate(bitmap.getByteCount());
+//                bitmap.copyPixelsToBuffer(dst);
+//
+//                int width = bitmap.getWidth();
+//                int height = bitmap.getHeight();
+//                Log.w("MainActivity","w,h = "+ width + ","+height);
+//                final byte[] bytes = nativeI420CropToARGB(dst.array(), bitmap.getWidth(), bitmap.getHeight(), width, height, 60, 58, 200, 400);
+//                Bitmap bm = Bitmap.createBitmap(width,width, Bitmap.Config.ARGB_8888);
+//                bm.copyPixelsFromBuffer(ByteBuffer.wrap(bytes));
+//                imageView2.setImageBitmap(bm);
+//                try {
+//                    FileOutputStream fos = new FileOutputStream("/sdcard/1.jpg");
+//                    bm.compress(Bitmap.CompressFormat.JPEG,100,fos);
+//                    fos.flush();
+//                    fos.close();
+//                } catch (FileNotFoundException e) {
+//                    e.printStackTrace();
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+                final String text = mEditText1.getText().toString();
+                int crop_x = 0;
+                int crop_y = 0;
+                int dst_width = 300;
+                int dst_height = 300;
+                if (!TextUtils.isEmpty(text)){
+                    final String[] split = text.split("-");
+                    crop_x = Integer.parseInt(split[0]);
+                    crop_y = Integer.parseInt(split[1]);
+                    if (split.length > 3) {
+                        dst_width = Integer.parseInt(split[2]);
+                        dst_height = dst_width;
+                    }
+                }
+
+
+                final InputStream inputStream = getResources().openRawResource(R.raw.haha);
                 try {
-                    FileOutputStream fos = new FileOutputStream("/sdcard/1.jpg");
-                    bm.compress(Bitmap.CompressFormat.JPEG,100,fos);
-                    fos.flush();
-                    fos.close();
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
+                    byte[] bytes = new byte[inputStream.available()];
+                    inputStream.read(bytes);
+                    inputStream.close();
+                    byte[] b = nativeI420CropToARGB(bytes,1280,720,dst_width,dst_height,crop_x,crop_y,dst_width,dst_height);
+                    Bitmap bm = Bitmap.createBitmap(dst_width,dst_height, Bitmap.Config.ARGB_8888);
+                    bm.copyPixelsFromBuffer(ByteBuffer.wrap(b));
+                    imageView2.setImageBitmap(bm);
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
